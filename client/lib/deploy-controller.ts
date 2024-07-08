@@ -44,8 +44,8 @@ import { SendTransactionRequest, TonConnectUI } from "@tonconnect/ui-react";
 */
 
 export const JETTON_DEPLOY_GAS = toNano(0.25);
-const tonDecimals = new BN(10**9);
-const jettonDecimals = new BN(10**6);
+const tonDecimals = 10**9;
+const jettonDecimals = 10**6;
 
 export enum JettonDeployState {
   NOT_STARTED,
@@ -182,27 +182,27 @@ async getReserve(minterAddress: Address) {
 
 async getCurrentPrice(minterAddress: Address) {
     const reserve = await this.getReserve(minterAddress);
-    const ton = reserve.ton.div(tonDecimals);
-    const jetton = reserve.jetton.div(jettonDecimals);
+    const ton = reserve.ton.div(new BN(tonDecimals));
+    const jetton = reserve.jetton.div(new BN(jettonDecimals));
     return ton.toNumber() / jetton.toNumber();
 }
 
-async getJettonAmountOut(minterAddress: Address, amountIn: string) {
+async getJettonAmountOut(minterAddress: Address, amountIn: number) {
     const reserve = await this.getReserve(minterAddress);
-    const tonAmountIn = new BN(amountIn).mul(tonDecimals);
+    const tonAmountIn = new BN((amountIn * tonDecimals).toString());
     const jettonAmountOut = tonAmountIn.mul(reserve.jetton).div(reserve.ton.add(tonAmountIn));
-    return jettonAmountOut.div(jettonDecimals).toString();
+    return jettonAmountOut.div(new BN(jettonDecimals)).toString();
 }
 
-getJettonAmountOutBeforeDeployment(amountIn: string) {
-    const tonAmountIn = new BN(amountIn).mul(tonDecimals);
+getJettonAmountOutBeforeDeployment(amountIn: number) {
+    const tonAmountIn = new BN((amountIn * tonDecimals).toString());
     const jettonAmountOut = tonAmountIn.mul(Initial_Reserve_Jetton).div(Initial_Reserve_Ton.add(tonAmountIn));
-    return jettonAmountOut.div(jettonDecimals).toString();
+    return jettonAmountOut.div(new BN(jettonDecimals)).toString();
 }
 
-async getTonAmountOut(minterAddress: Address, amountIn: string) {
+async getTonAmountOut(minterAddress: Address, amountIn: number) {
     const reserve = await this.getReserve(minterAddress);
-    const jettonAmountIn = new BN(amountIn).mul(jettonDecimals);
+    const jettonAmountIn = new BN(amountIn.toString()).mul(new BN(jettonDecimals));
     const tonAmountOut = jettonAmountIn.mul(reserve.ton).div(reserve.jetton.add(jettonAmountIn));
     return tonAmountOut.toNumber() / 10**9;
 }
