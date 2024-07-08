@@ -204,7 +204,7 @@ async getTonAmountOut(minterAddress: Address, amountIn: number) {
     const reserve = await this.getReserve(minterAddress);
     const jettonAmountIn = new BN(amountIn.toString()).mul(new BN(jettonDecimals));
     const tonAmountOut = jettonAmountIn.mul(reserve.ton).div(reserve.jetton.add(jettonAmountIn));
-    return tonAmountOut.toNumber() / 10**9;
+    return tonAmountOut.toNumber() / tonDecimals;
 }
 
 
