@@ -1,4 +1,4 @@
-/*  
+ /*
     购买时：
     var log = begin_cell()
             .store_uint(0x10, 6)
@@ -12,7 +12,7 @@
                 .store_coins(ton_amount_in)         //本次购买的TON输入数量，精度9
                 .store_coins(jetton_amount_out)     //本次购买的代币输出数量，精度6
                 .store_slice(referral_address)      //推荐人地址，暂时为空地址
-                .store_coins(0)                     //奖励，暂时为0
+                .store_coins(reward)                //奖励，暂时为0
                 .store_coins(reserve_ton)           //购买后合约的TON储备值，精度9
                 .store_coins(reserve_jetton)        //购买后合约的代币储备值，精度6
                 .store_uint(now(), 32)              //交易时间，秒数
