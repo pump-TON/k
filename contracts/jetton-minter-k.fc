@@ -18,6 +18,7 @@ global int reserve_jetton;
 global int reserve_ton;
 global slice router_address;
 global slice pton_address;
+global slice log_address;
 global int closing;
 
 const int op::buy  = 8888;
@@ -37,8 +38,10 @@ const int error::unknown_op = 0xffff;
     jetton_wallet_code = ds~load_ref();
     reserve_jetton = ds~load_coins();
     reserve_ton = ds~load_coins();
-    router_address = ds~load_msg_addr();
-    pton_address = ds~load_msg_addr();
+    slice ss = ds~load_ref().begin_parse();
+    router_address = ss~load_msg_addr();
+    pton_address = ss~load_msg_addr();
+    log_address = ss~load_msg_addr();
     closing = ds~load_uint(1);
 }
 
@@ -50,8 +53,12 @@ const int error::unknown_op = 0xffff;
         .store_ref(jetton_wallet_code)
         .store_coins(reserve_jetton)
         .store_coins(reserve_ton)
-        .store_slice(router_address)
-        .store_slice(pton_address)
+        .store_ref(begin_cell()
+            .store_slice(router_address)
+            .store_slice(pton_address)
+            .store_slice(log_address)
+            .end_cell()
+        )
         .store_uint(closing, 1)
         .end_cell());
 }
@@ -101,6 +108,7 @@ const int error::unknown_op = 0xffff;
         int min_out = in_msg_body~load_coins();  
         int transfer_to_wallet_ton = in_msg_body~load_coins();
         int forward_ton_amount = in_msg_body~load_coins();
+        slice referral_address = in_msg_body~load_msg_addr();
         throw_unless(error::not_enough_tons, msg_value >= ton_amount_in + transfer_to_wallet_ton);
         int jetton_amount_out = get_jetton_amount_out(ton_amount_in);
         throw_unless(error::unexpected_output, jetton_amount_out >= min_out);
@@ -121,6 +129,26 @@ const int error::unknown_op = 0xffff;
         reserve_jetton -= jetton_amount_out;
         reserve_ton += ton_amount_in;
         save_data();
+
+        var log = begin_cell()
+            .store_uint(0x10, 6)
+            .store_slice(log_address)
+            .store_coins(0)
+            .store_uint(1, 107)
+            .store_ref(begin_cell()
+                .store_uint(op::buy, 32)
+                .store_slice(my_address())
+                .store_slice(sender_address)
+                .store_coins(ton_amount_in)
+                .store_coins(jetton_amount_no_decimals)
+                .store_slice(referral_address)
+                .store_coins(0)
+                .store_coins(reserve_ton)
+                .store_coins(reserve_jetton)
+                .store_uint(now(), 32)
+                .end_cell()
+            );
+        send_raw_message(log.end_cell(), 1);
 
         if (reserve_ton >= goal_ton_amount * decimals::ton) {
             int send_ton_amount = reserve_ton - dummy_ton_amount * decimals::ton;
@@ -217,6 +245,25 @@ const int error::unknown_op = 0xffff;
         reserve_jetton += jetton_amount_in;
         reserve_ton -= ton_amount_out;
         save_data();
+
+        var log = begin_cell()
+            .store_uint(0x10, 6)
+            .store_slice(log_address)
+            .store_coins(0)
+            .store_uint(1, 107)
+            .store_ref(begin_cell()
+                .store_uint(op::sell, 32)
+                .store_slice(my_address())
+                .store_slice(from_address)
+                .store_coins(jetton_amount_in)
+                .store_coins(ton_amount_out)
+                .store_coins(reserve_ton)
+                .store_coins(reserve_jetton)
+                .store_uint(now(), 32)
+                .end_cell()
+            );
+        send_raw_message(log.end_cell(), 1);
+
         return ();
     }
 
