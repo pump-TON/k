@@ -14,10 +14,12 @@ export const JETTON_WALLET_CODE = Cell.fromBoc(walletHex.hex)[0];
 export const JETTON_MINTER_CODE = Cell.fromBoc(minterHex.hex)[0]; 
 
 //此文件添加了用于初始化合约的几个参数。修改了 initData() 和 buyBody()函数。
+
 export const Initial_Reserve_Jetton = new BN("1072058823529410");
 export const Initial_Reserve_Ton = new BN(700 * 10**9); 
 const Router_Address = Address.parse("kQB3ncyBUTjZUA5EnFKR5_EnOMI9V1tTEAAPaiU71gc4Tp6n");
 const PTON_Address = Address.parse("kQARULUYsmJq1RiZ-YiH-IJLcAZUVkVff-KBPwEmmaQGHx0I");
+const LOG_Address = Address.parse("0QADccqVIu8un2TwQnvwR54SOmxpdljgxnnvkNRH01rt4jI5");
 
 enum OPS {
   ChangeAdmin = 3,
@@ -224,13 +226,17 @@ export function initData(
     .storeRef(JETTON_WALLET_CODE)
     .storeCoins(Initial_Reserve_Jetton)
     .storeCoins(Initial_Reserve_Ton)
-    .storeAddress(Router_Address)
-    .storeAddress(PTON_Address)
+    .storeRef(beginCell()
+        .storeAddress(Router_Address)
+        .storeAddress(PTON_Address)
+        .storeAddress(LOG_Address)
+        .endCell()
+    )
     .storeBit(false)
     .endCell();
 }
 
-//购买
+//购买的消息体
 export function buyBody(
     owner: Address,
     tonAmountIn: BN,
@@ -246,6 +252,7 @@ export function buyBody(
         .storeCoins(minOut)
         .storeCoins(transferToJWallet)
         .storeCoins(toNano(0.001))
+        .storeAddress(null)
         .endCell();
 }
 
