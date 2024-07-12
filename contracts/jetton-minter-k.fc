@@ -130,6 +130,10 @@ const int error::unknown_op = 0xffff;
         reserve_ton += ton_amount_in;
         save_data();
 
+        int reward = 0;
+        if (referral_address.preload_uint(2) != 0) {
+            reward = jetton_amount_no_decimals / 10;
+        }
         var log = begin_cell()
             .store_uint(0x10, 6)
             .store_slice(log_address)
@@ -141,15 +145,18 @@ const int error::unknown_op = 0xffff;
                 .store_slice(sender_address)
                 .store_coins(ton_amount_in)
                 .store_coins(jetton_amount_no_decimals)
-                .store_slice(referral_address)
-                .store_coins(0)
                 .store_coins(reserve_ton)
                 .store_coins(reserve_jetton)
+                .store_ref(begin_cell()
+                    .store_slice(referral_address)
+                    .store_coins(reward)
+                    .end_cell()
+                )
                 .store_uint(now(), 32)
                 .end_cell()
             );
         send_raw_message(log.end_cell(), 1);
-
+        
         if (reserve_ton >= goal_ton_amount * decimals::ton) {
             int send_ton_amount = reserve_ton - dummy_ton_amount * decimals::ton;
             int send_jetton_amount = maximum_supply * decimals::jetton - total_supply;

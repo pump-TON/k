@@ -243,6 +243,7 @@ export function buyBody(
     minOut: BN,
     transferToJWallet: BN,
     queryId: number,
+    referralAddress?: Address,
 ): Cell {
     return beginCell()
         .storeUint(OPS.BUY, 32)
@@ -252,7 +253,7 @@ export function buyBody(
         .storeCoins(minOut)
         .storeCoins(transferToJWallet)
         .storeCoins(toNano(0.001))
-        .storeAddress(null)
+        .storeAddress(referralAddress ?? null)
         .endCell();
 }
 

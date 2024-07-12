@@ -112,6 +112,7 @@ class JettonDeployController {
     tonAmountIn: BN,
     minOut: BN,
     walletAddress: string,
+    referralAddress?: Address,
   ) {
     const tc = await getClient();
     const waiter = await waitForSeqno(
@@ -126,7 +127,7 @@ class JettonDeployController {
             address: jettonMaster.toString(),
             amount: tonAmountIn.add(toNano(0.15)).toString(),   
             stateInit: undefined,
-            payload: buyBody(Address.parse(walletAddress), tonAmountIn, minOut, toNano(0.13), 0).toBoc().toString("base64"),
+            payload: buyBody(Address.parse(walletAddress), tonAmountIn, minOut, toNano(0.13), 0, referralAddress).toBoc().toString("base64"),
           },
         ],
       };
